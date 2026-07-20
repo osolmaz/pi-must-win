@@ -30,6 +30,9 @@
   "bugs": {
     "url": "https://github.com/osolmaz/pi-must-win/issues"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "pi": {
     "extensions": [
       "./index.ts"
