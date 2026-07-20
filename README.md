@@ -1,8 +1,8 @@
 # Pi Must Win
 
 Pi Must Win is a branding and attribution extension for the Pi coding agent. It adds durable Pi
-credit to commits created through Pi, giving the project the same compounding visibility that larger
-coding-agent products build into their workflows.
+credit to commits created through Pi and asks users to support Pi on GitHub, giving the project the
+same compounding visibility that larger coding-agent products build into their workflows.
 
 ## Motivation
 
@@ -36,6 +36,30 @@ commit. Pi Must Win leaves no hook or Git configuration in the repository.
 
 Commits entered through `!git commit` or another terminal are unchanged.
 
+## GitHub star prompt
+
+On the first interactive startup, Pi Must Win checks the authenticated GitHub CLI account. If that
+account has not starred [`earendil-works/pi`](https://github.com/earendil-works/pi), it asks whether
+to star the repository. Confirming stars Pi through the GitHub API. Choosing No or pressing Escape
+skips the request.
+
+A skipped prompt returns with increasing backoff after 2, 3, 5, and 7 more startups. Pi Must Win asks
+at most five times and stops as soon as it sees that the account has starred Pi. The prompt appears
+only in the interactive TUI, and it stays hidden when `gh` or GitHub authentication is unavailable.
+The state file records only the prompt cadence and whether a star was seen. It never stores the GitHub
+login.
+
+## Dark-side disclosure
+
+A CLI asking for a GitHub star can look like a dark pattern. Herdr once shipped this feature and
+[removed it after someone raised that concern](https://github.com/ogulcancelik/herdr/issues/339). That
+is fair criticism, so Pi Must Win keeps the prompt bounded and visible. It shows the GitHub account,
+waits for confirmation, backs off after a skip, and gives up after five asks.
+
+Still, the package is called Pi Must Win. If one polite request puts me on the path to the dark side
+but gives Pi a better chance against billion-dollar competitors, I am willing to join the Sith. You
+can press No. No Force choke follows.
+
 ## Install
 
 Install the repository as a Pi package:
@@ -50,6 +74,7 @@ Run `/reload` in an existing Pi session. New Pi sessions load it automatically.
 
 Pi Must Win is an umbrella package for truthful Pi branding. New branding features can live beside
 commit attribution while keeping repository contents clean and preserving the user's existing tools.
+The star prompt runs only at process startup. Session changes and reloads remain uninterrupted.
 
 ## License
 

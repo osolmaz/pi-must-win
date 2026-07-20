@@ -6,6 +6,7 @@ export default defineConfig({
       exclude: [
         "**/*.test.ts",
         "features/register-commit-attribution.ts",
+        "features/register-github-star.ts",
         "index.ts",
         "vitest.config.ts",
       ],

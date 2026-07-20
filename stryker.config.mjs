@@ -1,7 +1,12 @@
 export default {
   checkers: ["typescript"],
   coverageAnalysis: "perTest",
-  mutate: ["git-commit-trailers.ts", "features/commit-attribution.ts"],
+  mutate: [
+    "git-commit-trailers.ts",
+    "features/commit-attribution.ts",
+    "features/github-star-state.ts",
+    "features/github-star.ts",
+  ],
   reporters: ["clear-text", "progress"],
   tempDirName: ".stryker-tmp",
   testRunner: "vitest",

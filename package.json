@@ -1,7 +1,7 @@
 {
   "name": "pi-must-win",
   "version": "0.1.0",
-  "description": "Pi branding and Git commit attribution extension",
+  "description": "Pi branding, Git commit attribution, and GitHub support extension",
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -20,6 +20,8 @@
     "pi-coding-agent",
     "branding",
     "git",
+    "github",
+    "star",
     "co-authored-by"
   ],
   "homepage": "https://github.com/osolmaz/pi-must-win#readme",
