@@ -27,7 +27,7 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
-      - run: npm install --global npm@latest
+      - run: npm install --global npm@11.6.2
       - run: npm ci
 
       - name: Validate package metadata
