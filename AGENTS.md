@@ -11,4 +11,4 @@
 - Avoid runtime dependencies when the standard library or Pi APIs suffice.
 - Before finishing, run `npm run check`, `npm run mutate`, `npm run slophammer`, and
   `git diff --check`.
-- Slophammer guidance: https://github.com/dutifuldev/slophammer/blob/main/docs/AGENT_ENTRYPOINT.md
+- Slophammer guidance: https://github.com/osolmaz/slophammer/blob/main/docs/AGENT_ENTRYPOINT.md
