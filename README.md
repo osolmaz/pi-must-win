@@ -62,7 +62,13 @@ can press No. No Force choke follows.
 
 ## Install
 
-Install the repository as a Pi package:
+Install Pi Must Win from npm:
+
+```bash
+pi install npm:pi-must-win
+```
+
+To install directly from the Git repository instead:
 
 ```bash
 pi install git:github.com/osolmaz/pi-must-win
