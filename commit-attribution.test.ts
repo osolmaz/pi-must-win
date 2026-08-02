@@ -1,8 +1,6 @@
-import type { ToolCallEvent } from "@earendil-works/pi-coding-agent";
 import { existsSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
 import { CommitAttributionSession } from "./features/commit-attribution.ts";
-import { wrapCommitToolCall } from "./features/register-commit-attribution.ts";
 
 const sessions: CommitAttributionSession[] = [];
 
@@ -50,38 +48,33 @@ describe("commit attribution session", () => {
     expect(secondDirectory).not.toBe(firstDirectory);
   });
 
-  it("wraps Unified Exec commands that use a POSIX shell", () => {
+  it("builds an attributed child environment without changing the input", () => {
     const session = createSession();
-    const event: ToolCallEvent = {
-      type: "tool_call",
-      toolCallId: "exec-1",
-      toolName: "exec_command",
-      input: { cmd: "git commit -m test", shell: "bash" },
+    const baseEnvironment: NodeJS.ProcessEnv = {
+      KEEP_ME: "yes",
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "user.name",
+      GIT_CONFIG_VALUE_0: "Tester",
     };
 
-    expect(wrapCommitToolCall(event, session, "Test Model", "0.80.10")).toBe(true);
-    expect(event.input["cmd"]).toEqual(expect.stringContaining("PI_MUST_WIN_CO_AUTHOR="));
-    expect(event.input["cmd"]).toEqual(expect.stringContaining("\ngit commit -m test"));
-  });
+    const environment = session.environment(baseEnvironment, "Test Model", "0.80.10");
 
-  it("leaves unsupported Unified Exec shells and malformed inputs unchanged", () => {
-    const session = createSession();
-    const powershell: ToolCallEvent = {
-      type: "tool_call",
-      toolCallId: "exec-2",
-      toolName: "exec_command",
-      input: { cmd: "git commit -m test", shell: "powershell" },
-    };
-    const malformed: ToolCallEvent = {
-      type: "tool_call",
-      toolCallId: "exec-3",
-      toolName: "exec_command",
-      input: { cmd: 42, shell: "bash" },
-    };
-
-    expect(wrapCommitToolCall(powershell, session, "Test Model", "0.80.10")).toBe(false);
-    expect(powershell.input["cmd"]).toBe("git commit -m test");
-    expect(wrapCommitToolCall(malformed, session, "Test Model", "0.80.10")).toBe(false);
-    expect(malformed.input["cmd"]).toBe(42);
+    expect(baseEnvironment).toEqual({
+      KEEP_ME: "yes",
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "user.name",
+      GIT_CONFIG_VALUE_0: "Tester",
+    });
+    expect(environment).toMatchObject({
+      KEEP_ME: "yes",
+      GIT_CONFIG_COUNT: "2",
+      GIT_CONFIG_KEY_0: "user.name",
+      GIT_CONFIG_VALUE_0: "Tester",
+      GIT_CONFIG_KEY_1: "core.hooksPath",
+      PI_MUST_WIN_GIT_CONFIG_INDEX: "1",
+      PI_MUST_WIN_CO_AUTHOR: "Co-Authored-By: Test Model <noreply@pi.dev>",
+      PI_MUST_WIN_GENERATED_BY: "Generated-By: pi 0.80.10 (https://pi.dev)",
+    });
+    expect(environment["GIT_CONFIG_VALUE_1"]).toMatch(/pi-must-win-hooks-/u);
   });
 });

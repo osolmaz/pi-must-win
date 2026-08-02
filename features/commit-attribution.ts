@@ -1,4 +1,5 @@
 import {
+  buildCommitAttributionEnvironment,
   createCommitHookDirectory,
   removeCommitHookDirectory,
   wrapBashWithCommitAttribution,
@@ -15,6 +16,14 @@ export class CommitAttributionSession {
   stop(): void {
     removeCommitHookDirectory(this.hooksDirectory);
     this.hooksDirectory = undefined;
+  }
+
+  environment(
+    baseEnvironment: NodeJS.ProcessEnv,
+    modelName: string,
+    piVersion: string,
+  ): NodeJS.ProcessEnv {
+    return buildCommitAttributionEnvironment(baseEnvironment, this.start(), modelName, piVersion);
   }
 
   wrap(command: string, modelName: string, piVersion: string): string {

@@ -8,6 +8,7 @@
     "node": ">=22.19.0"
   },
   "files": [
+    "docs/",
     "features/",
     "index.ts",
     "git-commit-trailers.ts",

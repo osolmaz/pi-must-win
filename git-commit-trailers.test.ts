@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  buildCommitAttributionEnvironment,
   buildCommitTrailers,
   createCommitHookDirectory,
   removeCommitHookDirectory,
@@ -99,6 +100,28 @@ git log -1 --format=%B
       expect(output).toContain(CO_AUTHOR);
       expect(output).toContain(GENERATED_BY);
       expect(existsSync(join(repo.cwd, ".git/hooks/prepare-commit-msg"))).toBe(false);
+    });
+  });
+
+  it("adds attribution through a child process environment", () => {
+    withGitRepo((repo) => {
+      const environment = buildCommitAttributionEnvironment(
+        createIsolatedGitEnvironment(),
+        repo.hooksDirectory,
+        MODEL_NAME,
+        PI_VERSION,
+      );
+      const output = execFileSync(
+        "bash",
+        [
+          "-lc",
+          "set -euo pipefail; echo one > a.txt; git add a.txt; git commit -q -m environment; git log -1 --format=%B",
+        ],
+        { cwd: repo.cwd, encoding: "utf8", env: environment },
+      );
+
+      expect(output).toContain(CO_AUTHOR);
+      expect(output).toContain(GENERATED_BY);
     });
   });
 
@@ -224,5 +247,38 @@ git log --format=%B --max-count=4
     expect(() => {
       removeCommitHookDirectory(hooksDirectory);
     }).not.toThrow();
+  });
+});
+
+describe("Git configuration environment", () => {
+  it("treats an empty inherited count as zero", () => {
+    const environment = buildCommitAttributionEnvironment(
+      { GIT_CONFIG_COUNT: "" },
+      "/tmp/hooks",
+      MODEL_NAME,
+      PI_VERSION,
+    );
+
+    expect(environment["GIT_CONFIG_COUNT"]).toBe("1");
+    expect(environment["GIT_CONFIG_KEY_0"]).toBe("core.hooksPath");
+  });
+
+  it("rejects malformed inherited counts", () => {
+    expect(() =>
+      buildCommitAttributionEnvironment(
+        { GIT_CONFIG_COUNT: "01" },
+        "/tmp/hooks",
+        MODEL_NAME,
+        PI_VERSION,
+      ),
+    ).toThrow("Invalid GIT_CONFIG_COUNT: 01");
+    expect(() =>
+      buildCommitAttributionEnvironment(
+        { GIT_CONFIG_COUNT: "999999999999999999999" },
+        "/tmp/hooks",
+        MODEL_NAME,
+        PI_VERSION,
+      ),
+    ).toThrow("GIT_CONFIG_COUNT is too large");
   });
 });

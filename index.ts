@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { registerCommitAttribution } from "./features/register-commit-attribution.ts";
+export { CommitAttributionSession } from "./features/commit-attribution.ts";
 import { registerGithubStar } from "./features/register-github-star.ts";
 
 type BrandingFeature = (pi: ExtensionAPI) => void;
