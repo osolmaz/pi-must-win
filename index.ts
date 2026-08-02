@@ -1,17 +1,15 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { CommitAttributionSession } from "./features/commit-attribution.ts";
 import { registerCommitAttribution } from "./features/register-commit-attribution.ts";
-export { CommitAttributionSession } from "./features/commit-attribution.ts";
 import { registerGithubStar } from "./features/register-github-star.ts";
 
-type BrandingFeature = (pi: ExtensionAPI) => void;
+export { CommitAttributionSession } from "./features/commit-attribution.ts";
 
-const brandingFeatures: readonly BrandingFeature[] = [
-  registerCommitAttribution,
-  registerGithubStar,
-];
+export type PiMustWinOptions = Readonly<{
+  commitAttributionSession?: CommitAttributionSession;
+}>;
 
-export default function piMustWin(pi: ExtensionAPI): void {
-  for (const registerFeature of brandingFeatures) {
-    registerFeature(pi);
-  }
+export default function piMustWin(pi: ExtensionAPI, options: PiMustWinOptions = {}): void {
+  registerCommitAttribution(pi, options.commitAttributionSession);
+  registerGithubStar(pi);
 }

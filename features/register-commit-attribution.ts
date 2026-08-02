@@ -2,9 +2,10 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType, VERSION } from "@earendil-works/pi-coding-agent";
 import { CommitAttributionSession } from "./commit-attribution.ts";
 
-export function registerCommitAttribution(pi: ExtensionAPI): void {
-  const session = new CommitAttributionSession();
-
+export function registerCommitAttribution(
+  pi: ExtensionAPI,
+  session: CommitAttributionSession = new CommitAttributionSession(),
+): void {
   pi.on("session_start", () => {
     session.start();
   });
