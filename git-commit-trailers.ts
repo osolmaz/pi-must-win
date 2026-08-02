@@ -21,6 +21,26 @@ export function buildCommitTrailers(modelName: string, piVersion: string): Commi
   };
 }
 
+/** Add process-local Git hook configuration and Pi metadata to a child environment. */
+export function buildCommitAttributionEnvironment(
+  environment: NodeJS.ProcessEnv,
+  hooksDirectory: string,
+  modelName: string,
+  piVersion: string,
+): NodeJS.ProcessEnv {
+  const trailers = buildCommitTrailers(modelName, piVersion);
+  const configIndex = parseGitConfigCount(environment["GIT_CONFIG_COUNT"]);
+  return {
+    ...environment,
+    PI_MUST_WIN_GIT_CONFIG_INDEX: String(configIndex),
+    PI_MUST_WIN_CO_AUTHOR: trailers.coAuthor,
+    PI_MUST_WIN_GENERATED_BY: trailers.generatedBy,
+    [`GIT_CONFIG_KEY_${String(configIndex)}`]: "core.hooksPath",
+    [`GIT_CONFIG_VALUE_${String(configIndex)}`]: hooksDirectory,
+    GIT_CONFIG_COUNT: String(configIndex + 1),
+  };
+}
+
 /** Create a session-scoped Git hooks directory for Pi commit attribution. */
 export function createCommitHookDirectory(): string {
   const hooksDirectory = mkdtempSync(join(tmpdir(), "pi-must-win-hooks-"));
@@ -45,6 +65,16 @@ export function wrapBashWithCommitAttribution(
 ): string {
   const trailers = buildCommitTrailers(modelName, piVersion);
   return `${buildEnvironmentPrefix(hooksDirectory, trailers)}\n${command}`;
+}
+
+function parseGitConfigCount(value: string | undefined): number {
+  if (value === undefined || value === "") return 0;
+  if (!/^(?:0|[1-9]\d*)$/u.test(value)) {
+    throw new Error(`Invalid GIT_CONFIG_COUNT: ${value}`);
+  }
+  const count = Number(value);
+  if (!Number.isSafeInteger(count)) throw new Error(`GIT_CONFIG_COUNT is too large: ${value}`);
+  return count;
 }
 
 function sanitizeTrailerValue(value: string, fallback: string): string {
