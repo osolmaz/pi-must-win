@@ -8,9 +8,12 @@ Create one `CommitAttributionSession` for the Pi session. Pass the child environ
 
 ```ts
 import { VERSION } from "@earendil-works/pi-coding-agent";
-import { CommitAttributionSession } from "pi-must-win/index.ts";
+import piMustWin, { CommitAttributionSession } from "pi-must-win/index.ts";
 
 const attribution = new CommitAttributionSession();
+
+// Reuse the same session for Pi Must Win's built-in Bash integration.
+piMustWin(pi, { commitAttributionSession: attribution });
 
 const childEnvironment = attribution.environment({ ...process.env }, activeModelName, VERSION);
 
