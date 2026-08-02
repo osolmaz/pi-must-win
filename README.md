@@ -39,7 +39,7 @@ be seen.
 
 ## Commit attribution
 
-When Pi creates a Git commit through its `bash` tool, Pi Must Win adds:
+When Pi creates a Git commit through its built-in `bash` tool or Unified Exec's `exec_command` tool, Pi Must Win adds:
 
 ```text
 Co-Authored-By: <model name> <noreply@pi.dev>
@@ -50,7 +50,7 @@ The extension uses a temporary `prepare-commit-msg` hook for the active Pi sessi
 still run, including hooks configured through `core.hooksPath`, and their failures still stop the
 commit. Pi Must Win leaves no hook or Git configuration in the repository.
 
-Commits entered through `!git commit` or another terminal are unchanged.
+Unified Exec attribution applies to its default POSIX shell and explicit Bash-compatible shells. Commands that select PowerShell, `cmd.exe`, Fish, or another incompatible shell are unchanged. Commits entered through `!git commit` or another terminal are also unchanged.
 
 ## GitHub star prompt
 

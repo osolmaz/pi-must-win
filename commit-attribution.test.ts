@@ -1,6 +1,8 @@
+import type { ToolCallEvent } from "@earendil-works/pi-coding-agent";
 import { existsSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
 import { CommitAttributionSession } from "./features/commit-attribution.ts";
+import { wrapCommitToolCall } from "./features/register-commit-attribution.ts";
 
 const sessions: CommitAttributionSession[] = [];
 
@@ -46,5 +48,40 @@ describe("commit attribution session", () => {
     session.stop();
     const secondDirectory = session.start();
     expect(secondDirectory).not.toBe(firstDirectory);
+  });
+
+  it("wraps Unified Exec commands that use a POSIX shell", () => {
+    const session = createSession();
+    const event: ToolCallEvent = {
+      type: "tool_call",
+      toolCallId: "exec-1",
+      toolName: "exec_command",
+      input: { cmd: "git commit -m test", shell: "bash" },
+    };
+
+    expect(wrapCommitToolCall(event, session, "Test Model", "0.80.10")).toBe(true);
+    expect(event.input["cmd"]).toEqual(expect.stringContaining("PI_MUST_WIN_CO_AUTHOR="));
+    expect(event.input["cmd"]).toEqual(expect.stringContaining("\ngit commit -m test"));
+  });
+
+  it("leaves unsupported Unified Exec shells and malformed inputs unchanged", () => {
+    const session = createSession();
+    const powershell: ToolCallEvent = {
+      type: "tool_call",
+      toolCallId: "exec-2",
+      toolName: "exec_command",
+      input: { cmd: "git commit -m test", shell: "powershell" },
+    };
+    const malformed: ToolCallEvent = {
+      type: "tool_call",
+      toolCallId: "exec-3",
+      toolName: "exec_command",
+      input: { cmd: 42, shell: "bash" },
+    };
+
+    expect(wrapCommitToolCall(powershell, session, "Test Model", "0.80.10")).toBe(false);
+    expect(powershell.input["cmd"]).toBe("git commit -m test");
+    expect(wrapCommitToolCall(malformed, session, "Test Model", "0.80.10")).toBe(false);
+    expect(malformed.input["cmd"]).toBe(42);
   });
 });

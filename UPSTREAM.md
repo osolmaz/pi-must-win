@@ -29,8 +29,8 @@ package.json
 ```
 
 The package has no runtime dependencies. Its only package script runs Vitest. Runtime behavior is
-limited to creating and deleting a temporary hook directory and prefixing Pi agent `bash` calls with
-process-local Git configuration and trailer values. It does not access the network, credentials,
+limited to creating and deleting a temporary hook directory and prefixing supported Pi shell-tool
+calls with process-local Git configuration and trailer values. It does not access the network, credentials,
 provider requests, trust decisions, or background services.
 
 Local changes turn the source into the first feature of the standalone `pi-must-win` extension.
