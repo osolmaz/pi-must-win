@@ -52,6 +52,34 @@ commit. Pi Must Win leaves no hook or Git configuration in the repository.
 
 Commits entered through `!git commit` or another terminal are unchanged. Other command executors can add attribution without rewriting shell commands through the [child environment API](docs/command-executor-integration.md).
 
+## Disabling per repository
+
+Pi Must Win skips the whole extension — commit attribution and the star prompt — for repositories
+listed in a global config file at `$XDG_CONFIG_HOME/pi-must-win/config.json` (default
+`~/.config/pi-must-win/config.json`):
+
+```json
+{ "disabledRepos": ["github.com/openclaw", "~/experiments/junk"] }
+```
+
+Entries are remote-URL keys or absolute local paths:
+
+- URL entries accept any remote syntax (`git@github.com:owner/repo.git`, `https://...`, `ssh://...`,
+  with or without a port) and normalize to a lowercase `host/path` key. An entry matches exactly or
+  as a path-segment prefix, so `github.com/openclaw` disables the whole org while `github.com/open`
+  does not match `github.com/openclaw`.
+- Path entries (starting with `/` or `~`) match the main clone path exactly, with symlinks resolved.
+
+Matching keys on repository identity, not the working directory: the extension resolves
+`git remote get-url origin` and `git rev-parse --path-format=absolute --git-common-dir` at load
+time, so every linked worktree of a disabled repo is covered without committing configuration into
+the repository. A missing or malformed config file disables nothing, and an empty list skips the
+Git subprocesses entirely. Note that matching uses the `origin` remote, so a personal fork needs
+its own entry.
+
+The decision is made once when the extension loads. A session that starts in an allowed repo and
+later commits inside a disabled one still gets trailers.
+
 ## GitHub star prompt
 
 On the first interactive startup, Pi Must Win checks the authenticated GitHub CLI account. If that
