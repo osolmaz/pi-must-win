@@ -4,7 +4,7 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import piMustWin from "./index.ts";
 import {
@@ -252,15 +252,22 @@ describe("isRepoDisabledForSession", () => {
 });
 
 describe("piMustWin gate", () => {
+  /** Minimal typed seam of the ExtensionAPI members `piMustWin` actually calls. */
+  type MockPi = {
+    exec: () => Promise<{ stdout: string; stderr: string; code: number }>;
+    on: (event: string, handler: (...args: unknown[]) => unknown) => void;
+  };
+
   function createMockPi() {
-    const handlers = new Map<string, unknown[]>();
-    const pi = {
-      exec: vi.fn(),
-      on: vi.fn((event: string, handler: unknown) => {
+    const handlers = new Map<string, ((...args: unknown[]) => unknown)[]>();
+    const mock: MockPi = {
+      exec: () => Promise.resolve({ stdout: "", stderr: "", code: 0 }),
+      on: (event, handler) => {
         handlers.set(event, [...(handlers.get(event) ?? []), handler]);
-      }),
-    } as unknown as ExtensionAPI;
-    return { pi, handlers };
+      },
+    };
+    // Widening assertion from the checked minimal seam to the full interface.
+    return { pi: mock as unknown as ExtensionAPI, handlers };
   }
 
   it("registers nothing when the repository is disabled", () => {
