@@ -6,6 +6,7 @@ export default {
     "features/commit-attribution.ts",
     "features/github-star-state.ts",
     "features/github-star.ts",
+    "features/repo-disable.ts",
   ],
   reporters: ["clear-text", "progress"],
   tempDirName: ".stryker-tmp",
