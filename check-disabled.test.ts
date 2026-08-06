@@ -87,5 +87,7 @@ describe("check-disabled matcher", () => {
     const linked = join(tempDir(), "linked");
     execFileSync("git", ["worktree", "add", "-q", linked], { cwd: repo });
     expect(runCheck(linked, ["github.com/openclaw"], [])).toBe(0);
+    expect(runCheck(linked, [], [realpathSync(repo)])).toBe(0);
+    expect(runCheck(linked, [], [realpathSync(linked)])).toBe(1);
   });
 });
