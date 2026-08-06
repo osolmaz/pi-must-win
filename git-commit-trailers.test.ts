@@ -6,10 +6,12 @@ import { describe, expect, it } from "vitest";
 import {
   buildCommitAttributionEnvironment,
   buildCommitTrailers,
+  checkDisabledPath,
   createCommitHookDirectory,
   removeCommitHookDirectory,
   wrapBashWithCommitAttribution,
 } from "./git-commit-trailers.ts";
+import { type DisabledEntries } from "./features/repo-disable.ts";
 
 const MODEL_NAME = "Model O'Clock";
 const OTHER_MODEL_NAME = "Other Model";
@@ -21,7 +23,7 @@ type GitRepo = {
   cleanup: () => void;
   cwd: string;
   hooksDirectory: string;
-  run: (script: string, modelName?: string) => string;
+  run: (script: string, modelName?: string, disabled?: DisabledEntries) => string;
 };
 
 function createIsolatedGitEnvironment(): NodeJS.ProcessEnv {
@@ -34,14 +36,15 @@ function createIsolatedGitEnvironment(): NodeJS.ProcessEnv {
   return environment;
 }
 
-function createGitRepo(): GitRepo {
+function createGitRepo(remote?: string): GitRepo {
   const cwd = mkdtempSync(join(tmpdir(), "pi-must-win-test-"));
   const hooksDirectory = createCommitHookDirectory();
+  const remoteSetup = remote === undefined ? "" : `\ngit remote add origin '${remote}'`;
   execFileSync(
     "bash",
     [
       "-lc",
-      "set -euo pipefail\ngit init -q\ngit config user.name Tester\ngit config user.email tester@example.com",
+      `set -euo pipefail\ngit init -q\ngit config user.name Tester\ngit config user.email tester@example.com${remoteSetup}`,
     ],
     { cwd, env: createIsolatedGitEnvironment(), stdio: ["ignore", "pipe", "pipe"] },
   );
@@ -49,12 +52,13 @@ function createGitRepo(): GitRepo {
   const repo: GitRepo = {
     cwd,
     hooksDirectory,
-    run(script, modelName = MODEL_NAME) {
+    run(script, modelName = MODEL_NAME, disabled?: DisabledEntries) {
       const wrapped = wrapBashWithCommitAttribution(
         script,
         repo.hooksDirectory,
         modelName,
         PI_VERSION,
+        disabled,
       );
       return execFileSync("bash", ["-lc", `set -euo pipefail\n${wrapped}`], {
         cwd,
@@ -71,8 +75,8 @@ function createGitRepo(): GitRepo {
   return repo;
 }
 
-function withGitRepo<T>(run: (repo: GitRepo) => T): T {
-  const repo = createGitRepo();
+function withGitRepo<T>(run: (repo: GitRepo) => T, remote?: string): T {
+  const repo = createGitRepo(remote);
   try {
     return run(repo);
   } finally {
@@ -280,5 +284,80 @@ describe("Git configuration environment", () => {
         PI_VERSION,
       ),
     ).toThrow("GIT_CONFIG_COUNT is too large");
+  });
+});
+
+describe("hook-time repository disable", () => {
+  const DISABLED: DisabledEntries = { urls: ["github.com/openclaw"], paths: [] };
+  const ENABLED: DisabledEntries = { urls: ["github.com/otherorg"], paths: [] };
+  const COMMIT_AND_LOG =
+    "echo one > a; git add a; git commit -q -m subject; git log -1 --format=%B";
+
+  it("skips trailers in a disabled repo but still runs the repo hook", () => {
+    withGitRepo((repo) => {
+      writeFileSync(
+        join(repo.cwd, ".git/hooks/prepare-commit-msg"),
+        '#!/bin/sh\nprintf "\\nUser-Hook: default\\n" >> "$1"\n',
+        { mode: 0o755 },
+      );
+      const output = repo.run(COMMIT_AND_LOG, MODEL_NAME, DISABLED);
+      expect(output).toContain("User-Hook: default");
+      expect(output).not.toContain(CO_AUTHOR);
+      expect(output).not.toContain(GENERATED_BY);
+    }, "git@github.com:OpenClaw/OpenClaw.git");
+  });
+
+  it("adds trailers when entries do not match or are empty", () => {
+    withGitRepo((repo) => {
+      const output = repo.run(COMMIT_AND_LOG, MODEL_NAME, ENABLED);
+      expect(output).toContain(CO_AUTHOR);
+      const empty = repo.run(
+        "echo two > b; git add b; git commit -q -m second; git log -1 --format=%B",
+        MODEL_NAME,
+        { urls: [], paths: [] },
+      );
+      expect(empty).toContain(CO_AUTHOR);
+    }, "git@github.com:OpenClaw/OpenClaw.git");
+  });
+
+  it("skips trailers on a realpath clone-path match", () => {
+    withGitRepo((repo) => {
+      const output = repo.run(COMMIT_AND_LOG, MODEL_NAME, {
+        urls: [],
+        paths: [repo.cwd],
+      });
+      expect(output).not.toContain(CO_AUTHOR);
+    });
+  });
+
+  it("fails open when the matcher is missing and leaves the Git config clean", () => {
+    withGitRepo((repo) => {
+      const output = repo.run(
+        `export PI_MUST_WIN_CHECK=/nonexistent/check.mjs; ${COMMIT_AND_LOG}; git config --get core.hooksPath || true`,
+        MODEL_NAME,
+        DISABLED,
+      );
+      expect(output).toContain(CO_AUTHOR);
+      expect(countOccurrences(output, "core.hooksPath")).toBe(0);
+    }, "git@github.com:OpenClaw/OpenClaw.git");
+  });
+
+  it("exposes the matcher environment only when entries are provided", () => {
+    const base = buildCommitAttributionEnvironment({}, "/hooks", MODEL_NAME, PI_VERSION);
+    expect(base["PI_MUST_WIN_CHECK"]).toBeUndefined();
+    const wrapped = wrapBashWithCommitAttribution("git status", "/hooks", MODEL_NAME, PI_VERSION);
+    expect(wrapped.endsWith("unset __pi_must_win_git_config_index\ngit status")).toBe(true);
+    const withEntries = buildCommitAttributionEnvironment(
+      {},
+      "/hooks",
+      MODEL_NAME,
+      PI_VERSION,
+      DISABLED,
+    );
+    expect(withEntries["PI_MUST_WIN_DISABLED_URLS"]).toBe('["github.com/openclaw"]');
+    expect(withEntries["PI_MUST_WIN_DISABLED_PATHS"]).toBe("[]");
+    expect(withEntries["PI_MUST_WIN_NODE"]).toBe(process.execPath);
+    expect(withEntries["PI_MUST_WIN_CHECK"]).toBe(checkDisabledPath());
+    expect(existsSync(checkDisabledPath())).toBe(true);
   });
 });

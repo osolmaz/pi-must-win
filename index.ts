@@ -8,12 +8,14 @@ export { CommitAttributionSession } from "./features/commit-attribution.ts";
 export {
   DEFAULT_CONFIG_PATH,
   defaultConfigPath,
+  disabledEntriesForEnv,
   isRepoDisabled,
   isRepoDisabledForSession,
   loadConfig,
   normalizeRepoUrl,
   parseConfig,
   resolveRepoIdentity,
+  type DisabledEntries,
   type RepoDisableConfig,
   type RepoDisableOptions,
   type RepoIdentity,
@@ -27,6 +29,6 @@ export type PiMustWinOptions = Readonly<{
 
 export default function piMustWin(pi: ExtensionAPI, options: PiMustWinOptions = {}): void {
   if (isRepoDisabledForSession(options.repoDisable)) return;
-  registerCommitAttribution(pi, options.commitAttributionSession);
+  registerCommitAttribution(pi, options.commitAttributionSession, options.repoDisable);
   registerGithubStar(pi);
 }

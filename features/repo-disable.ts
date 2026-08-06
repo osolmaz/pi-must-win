@@ -140,6 +140,30 @@ export function resolveRepoIdentity(cwd: string): RepoIdentity {
   };
 }
 
+/** Pre-normalized disabled entries for the attribution environment. */
+export type DisabledEntries = {
+  /** Lowercase `host/path` URL keys, prefix-matched on path segments. */
+  urls: string[];
+  /** Realpath-resolved absolute clone paths, exact-matched. */
+  paths: string[];
+};
+
+/** Normalize the disabled entries once per session; no identity resolution happens here. */
+export function disabledEntriesForEnv(configPath: string = DEFAULT_CONFIG_PATH): DisabledEntries {
+  const config = loadConfig(configPath);
+  const urls: string[] = [];
+  const paths: string[] = [];
+  for (const entry of config.disabledRepos) {
+    if (isPathEntry(entry)) {
+      paths.push(resolveRealPath(normalizeRepoPath(entry)));
+    } else {
+      const key = normalizeRepoUrl(entry);
+      if (key !== "") urls.push(key);
+    }
+  }
+  return { urls, paths };
+}
+
 /** Check the session repository against the global disable config, failing open. */
 export function isRepoDisabledForSession(options: RepoDisableOptions = {}): boolean {
   const config = loadConfig(options.configPath ?? DEFAULT_CONFIG_PATH);

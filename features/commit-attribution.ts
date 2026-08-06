@@ -4,9 +4,12 @@ import {
   removeCommitHookDirectory,
   wrapBashWithCommitAttribution,
 } from "../git-commit-trailers.ts";
+import { type DisabledEntries } from "./repo-disable.ts";
 
 export class CommitAttributionSession {
   private hooksDirectory: string | undefined;
+
+  constructor(private readonly disabledEntries?: DisabledEntries) {}
 
   start(): string {
     this.hooksDirectory ??= createCommitHookDirectory();
@@ -23,10 +26,22 @@ export class CommitAttributionSession {
     modelName: string,
     piVersion: string,
   ): NodeJS.ProcessEnv {
-    return buildCommitAttributionEnvironment(baseEnvironment, this.start(), modelName, piVersion);
+    return buildCommitAttributionEnvironment(
+      baseEnvironment,
+      this.start(),
+      modelName,
+      piVersion,
+      this.disabledEntries,
+    );
   }
 
   wrap(command: string, modelName: string, piVersion: string): string {
-    return wrapBashWithCommitAttribution(command, this.start(), modelName, piVersion);
+    return wrapBashWithCommitAttribution(
+      command,
+      this.start(),
+      modelName,
+      piVersion,
+      this.disabledEntries,
+    );
   }
 }

@@ -5,6 +5,7 @@ export default tseslint.config(
   {
     ignores: [
       ".stryker-tmp/**",
+      "check-disabled.mjs",
       "coverage/**",
       "eslint.config.mjs",
       "stryker.config.mjs",

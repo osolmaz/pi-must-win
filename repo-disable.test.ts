@@ -10,6 +10,7 @@ import piMustWin from "./index.ts";
 import {
   DEFAULT_CONFIG_PATH,
   defaultConfigPath,
+  disabledEntriesForEnv,
   isRepoDisabled,
   isRepoDisabledForSession,
   loadConfig,
@@ -248,6 +249,40 @@ describe("isRepoDisabledForSession", () => {
     expect(isRepoDisabledForSession({ identity: { urlKey: undefined, repoPath: undefined } })).toBe(
       false,
     );
+  });
+});
+
+describe("disabledEntriesForEnv", () => {
+  it("normalizes URL entries and drops empty keys", () => {
+    const configPath = tempConfig(
+      JSON.stringify({
+        disabledRepos: [
+          "git@github.com:OpenClaw/OpenClaw.git",
+          "ssh://git@github.com:2222/openclaw/clawhub",
+          ".git",
+        ],
+      }),
+    );
+    expect(disabledEntriesForEnv(configPath)).toEqual({
+      urls: ["github.com/openclaw/openclaw", "github.com/openclaw/clawhub"],
+      paths: [],
+    });
+  });
+
+  it("resolves path entries to real absolute paths", () => {
+    const dir = tempDir();
+    const link = join(tempDir(), "link");
+    symlinkSync(dir, link);
+    const configPath = tempConfig(
+      JSON.stringify({ disabledRepos: [link, `${dir}/`, join(dir, ".git")] }),
+    );
+    const entries = disabledEntriesForEnv(configPath);
+    expect(entries.urls).toEqual([]);
+    expect(entries.paths).toEqual([realpathSync(dir), realpathSync(dir), realpathSync(dir)]);
+  });
+
+  it("returns empty lists when the config is missing", () => {
+    expect(disabledEntriesForEnv(missingConfigPath())).toEqual({ urls: [], paths: [] });
   });
 });
 
