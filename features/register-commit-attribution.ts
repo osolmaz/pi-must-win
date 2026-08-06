@@ -3,6 +3,11 @@ import { isToolCallEventType, VERSION } from "@earendil-works/pi-coding-agent";
 import { CommitAttributionSession } from "./commit-attribution.ts";
 import { disabledEntriesForEnv, type RepoDisableOptions } from "./repo-disable.ts";
 
+/**
+ * Register commit attribution. When the caller provides a `session`, `repoDisable` is ignored:
+ * a custom session must be constructed with `disabledEntriesForEnv` itself, or the hook-time
+ * repository disable matcher receives no entries and never runs.
+ */
 export function registerCommitAttribution(
   pi: ExtensionAPI,
   session?: CommitAttributionSession,
