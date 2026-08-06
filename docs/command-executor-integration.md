@@ -8,9 +8,11 @@ Create one `CommitAttributionSession` for the Pi session. Pass the child environ
 
 ```ts
 import { VERSION } from "@earendil-works/pi-coding-agent";
-import piMustWin, { CommitAttributionSession } from "pi-must-win/index.ts";
+import piMustWin, { CommitAttributionSession, disabledEntriesForEnv } from "pi-must-win/index.ts";
 
-const attribution = new CommitAttributionSession();
+// Pass the pre-normalized disabled entries so the hook-time repository disable matcher runs in
+// every child environment. Without them, `repoDisable` options are ignored for custom sessions.
+const attribution = new CommitAttributionSession(disabledEntriesForEnv());
 
 // Reuse the same session for Pi Must Win's built-in Bash integration.
 piMustWin(pi, { commitAttributionSession: attribution });
