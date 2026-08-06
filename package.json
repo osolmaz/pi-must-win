@@ -1,6 +1,6 @@
 {
   "name": "pi-must-win",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Pi branding, Git commit attribution, and GitHub support extension",
   "type": "module",
   "license": "MIT",
@@ -12,6 +12,7 @@
     "features/",
     "index.ts",
     "git-commit-trailers.ts",
+    "check-disabled.mjs",
     "LICENSE",
     "README.md",
     "UPSTREAM.md"

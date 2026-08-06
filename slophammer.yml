@@ -9,6 +9,8 @@ typescript:
       - .
     exclude:
       - "**/*.test.ts"
+      - pattern: "check-disabled.mjs"
+        reason: "Deliberate duplication: the hook-time matcher must run without a TypeScript loader, so it mirrors the tested normalization in features/repo-disable.ts on purpose."
     copied_blocks:
       enabled: true
       min_tokens: 100

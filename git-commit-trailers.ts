@@ -1,6 +1,9 @@
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { type DisabledEntries } from "./features/repo-disable.ts";
 
 const CO_AUTHOR_TRAILER = "Co-Authored-By";
 const GENERATED_BY_TRAILER = "Generated-By";
@@ -21,12 +24,18 @@ export function buildCommitTrailers(modelName: string, piVersion: string): Commi
   };
 }
 
+/** Absolute path of the hook-time repository disable matcher. */
+export function checkDisabledPath(): string {
+  return join(dirname(fileURLToPath(import.meta.url)), "check-disabled.mjs");
+}
+
 /** Add process-local Git hook configuration and Pi metadata to a child environment. */
 export function buildCommitAttributionEnvironment(
   environment: NodeJS.ProcessEnv,
   hooksDirectory: string,
   modelName: string,
   piVersion: string,
+  disabled?: DisabledEntries,
 ): NodeJS.ProcessEnv {
   const trailers = buildCommitTrailers(modelName, piVersion);
   const configIndex = parseGitConfigCount(environment["GIT_CONFIG_COUNT"]);
@@ -38,6 +47,17 @@ export function buildCommitAttributionEnvironment(
     [`GIT_CONFIG_KEY_${String(configIndex)}`]: "core.hooksPath",
     [`GIT_CONFIG_VALUE_${String(configIndex)}`]: hooksDirectory,
     GIT_CONFIG_COUNT: String(configIndex + 1),
+    ...disabledEnvironment(disabled),
+  };
+}
+
+function disabledEnvironment(disabled: DisabledEntries | undefined): NodeJS.ProcessEnv {
+  if (disabled === undefined) return {};
+  return {
+    PI_MUST_WIN_DISABLED_URLS: JSON.stringify(disabled.urls),
+    PI_MUST_WIN_DISABLED_PATHS: JSON.stringify(disabled.paths),
+    PI_MUST_WIN_NODE: process.execPath,
+    PI_MUST_WIN_CHECK: checkDisabledPath(),
   };
 }
 
@@ -62,9 +82,10 @@ export function wrapBashWithCommitAttribution(
   hooksDirectory: string,
   modelName: string,
   piVersion: string,
+  disabled?: DisabledEntries,
 ): string {
   const trailers = buildCommitTrailers(modelName, piVersion);
-  return `${buildEnvironmentPrefix(hooksDirectory, trailers)}\n${command}`;
+  return `${buildEnvironmentPrefix(hooksDirectory, trailers, disabled)}\n${command}`;
 }
 
 function parseGitConfigCount(value: string | undefined): number {
@@ -86,7 +107,11 @@ function sanitizeTrailerValue(value: string, fallback: string): string {
   return sanitized || fallback;
 }
 
-function buildEnvironmentPrefix(hooksDirectory: string, trailers: CommitTrailers): string {
+function buildEnvironmentPrefix(
+  hooksDirectory: string,
+  trailers: CommitTrailers,
+  disabled: DisabledEntries | undefined,
+): string {
   return `__pi_must_win_git_config_index="\${GIT_CONFIG_COUNT:-0}"
 export PI_MUST_WIN_GIT_CONFIG_INDEX="$__pi_must_win_git_config_index"
 export PI_MUST_WIN_CO_AUTHOR=${shellQuote(trailers.coAuthor)}
@@ -94,7 +119,16 @@ export PI_MUST_WIN_GENERATED_BY=${shellQuote(trailers.generatedBy)}
 export "GIT_CONFIG_KEY_\${__pi_must_win_git_config_index}=core.hooksPath"
 export "GIT_CONFIG_VALUE_\${__pi_must_win_git_config_index}=${escapeDoubleQuotedAssignmentValue(hooksDirectory)}"
 export GIT_CONFIG_COUNT="$((__pi_must_win_git_config_index + 1))"
-unset __pi_must_win_git_config_index`;
+unset __pi_must_win_git_config_index${disabledPrefix(disabled)}`;
+}
+
+function disabledPrefix(disabled: DisabledEntries | undefined): string {
+  if (disabled === undefined) return "";
+  return `
+export PI_MUST_WIN_DISABLED_URLS=${shellQuote(JSON.stringify(disabled.urls))}
+export PI_MUST_WIN_DISABLED_PATHS=${shellQuote(JSON.stringify(disabled.paths))}
+export PI_MUST_WIN_NODE=${shellQuote(process.execPath)}
+export PI_MUST_WIN_CHECK=${shellQuote(checkDisabledPath())}`;
 }
 
 function buildPrepareCommitMessageHook(): string {
@@ -103,6 +137,14 @@ set -eu
 
 message_file="$1"
 
+skip_trailers=0
+if [ -n "\${PI_MUST_WIN_CHECK:-}" ] && [ -f "$PI_MUST_WIN_CHECK" ]; then
+  if "\${PI_MUST_WIN_NODE:-node}" "$PI_MUST_WIN_CHECK"; then
+    skip_trailers=1
+  fi
+fi
+
+if [ "$skip_trailers" != "1" ]; then
 git \\
   -c trailer.co-authored-by.ifExists=addIfDifferent \\
   -c trailer.generated-by.ifExists=replace \\
@@ -111,6 +153,7 @@ git \\
   --trailer "$PI_MUST_WIN_CO_AUTHOR" \\
   --trailer "$PI_MUST_WIN_GENERATED_BY" \\
   "$message_file"
+fi
 
 __pi_config_index="$PI_MUST_WIN_GIT_CONFIG_INDEX"
 unset "GIT_CONFIG_KEY_$__pi_config_index"

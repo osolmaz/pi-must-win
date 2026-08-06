@@ -77,8 +77,13 @@ the repository. A missing or malformed config file disables nothing, and an empt
 Git subprocesses entirely. Note that matching uses the `origin` remote, so a personal fork needs
 its own entry.
 
-The decision is made once when the extension loads. A session that starts in an allowed repo and
-later commits inside a disabled one still gets trailers.
+The check runs twice. When the extension loads, a session started inside a disabled repo skips
+the whole extension. Independently, the temporary `prepare-commit-msg` hook re-checks the repo it
+is actually committing to through a small matcher (`check-disabled.mjs`, run with the same Node
+binary as Pi), so commits made into a disabled repo from any other session directory — through
+`git -C`, `cd` chains, or child processes — are skipped too. Skipped commits still restore the
+Git configuration and chain to the repo's own hooks. A missing matcher or matcher error fails
+open and keeps the trailers.
 
 ## GitHub star prompt
 
