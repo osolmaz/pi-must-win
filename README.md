@@ -1,12 +1,12 @@
-# Pi Must Win
+# pi-must-win
 
-Pi Must Win is a branding and attribution extension for the Pi coding agent. It adds durable Pi
+pi-must-win is a branding and attribution extension for the Pi coding agent. It adds durable Pi
 credit to commits created through Pi and asks users to support Pi on GitHub, giving the project the
 same compounding visibility that larger coding-agent products build into their workflows.
 
 ## Install
 
-Install Pi Must Win from npm:
+Install pi-must-win from npm:
 
 ```bash
 pi install npm:pi-must-win
@@ -29,7 +29,7 @@ attribution settings, dedicated UI, and even standalone attribution modules. The
 code and public source.
 
 Pi operates with a fraction of the money and staff behind those products, yet it can compete with
-them. Pi Must Win gives Pi the same kind of product growth loop. Each attributed commit can lead
+them. pi-must-win gives Pi the same kind of product growth loop. Each attributed commit can lead
 another developer back to [pi.dev](https://pi.dev) without adding banners to source files or pull
 request text.
 
@@ -39,7 +39,7 @@ be seen.
 
 ## Commit attribution
 
-When Pi creates a Git commit through its built-in `bash` tool, Pi Must Win adds:
+When Pi creates a Git commit through its built-in `bash` tool, pi-must-win adds:
 
 ```text
 Co-Authored-By: <model name> <noreply@pi.dev>
@@ -48,13 +48,13 @@ Generated-By: pi <version> (https://pi.dev)
 
 The extension uses a temporary `prepare-commit-msg` hook for the active Pi session. Existing hooks
 still run, including hooks configured through `core.hooksPath`, and their failures still stop the
-commit. Pi Must Win leaves no hook or Git configuration in the repository.
+commit. pi-must-win leaves no hook or Git configuration in the repository.
 
 Commits entered through `!git commit` or another terminal are unchanged. Other command executors can add attribution without rewriting shell commands through the [child environment API](docs/command-executor-integration.md).
 
 ## Disabling per repository
 
-Pi Must Win skips the whole extension — commit attribution and the star prompt — for repositories
+pi-must-win skips the whole extension — commit attribution and the star prompt — for repositories
 listed in a global config file at `$XDG_CONFIG_HOME/pi-must-win/config.json` (default
 `~/.config/pi-must-win/config.json`):
 
@@ -87,12 +87,12 @@ open and keeps the trailers.
 
 ## GitHub star prompt
 
-On the first interactive startup, Pi Must Win checks the authenticated GitHub CLI account. If that
+On the first interactive startup, pi-must-win checks the authenticated GitHub CLI account. If that
 account has not starred [`earendil-works/pi`](https://github.com/earendil-works/pi), it asks whether
 to star the repository. Confirming stars Pi through the GitHub API. Choosing No or pressing Escape
 skips the request.
 
-A skipped prompt returns with increasing backoff after 2, 3, 5, and 7 more startups. Pi Must Win asks
+A skipped prompt returns with increasing backoff after 2, 3, 5, and 7 more startups. pi-must-win asks
 at most five times and stops as soon as it sees that the account has starred Pi. The prompt appears
 only in the interactive TUI, and it stays hidden when `gh` or GitHub authentication is unavailable.
 The state file records only the prompt cadence and whether a star was seen. It never stores the GitHub
@@ -102,16 +102,16 @@ login.
 
 A CLI asking for a GitHub star can look like a dark pattern. Herdr once shipped this feature and
 [removed it after someone raised that concern](https://github.com/ogulcancelik/herdr/issues/339). That
-is fair criticism, so Pi Must Win keeps the prompt bounded and visible. It shows the GitHub account,
+is fair criticism, so pi-must-win keeps the prompt bounded and visible. It shows the GitHub account,
 waits for confirmation, backs off after a skip, and gives up after five asks.
 
-Still, the package is called Pi Must Win. If one polite request puts me on the path to the dark side
+Still, the package is called pi-must-win. If one polite request puts me on the path to the dark side
 but gives Pi a better chance against billion-dollar competitors, I am willing to join the Sith. You
 can press No. No Force choke follows.
 
 ## Scope
 
-Pi Must Win is an umbrella package for truthful Pi branding. New branding features can live beside
+pi-must-win is an umbrella package for truthful Pi branding. New branding features can live beside
 commit attribution while keeping repository contents clean and preserving the user's existing tools.
 The star prompt runs only at process startup. Session changes and reloads remain uninterrupted.
 

@@ -3,7 +3,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-/** Configuration read from the global Pi Must Win config file. */
+/** Configuration read from the global pi-must-win config file. */
 export type RepoDisableConfig = {
   /** URL keys such as `github.com/openclaw/openclaw`, or absolute repository paths. */
   disabledRepos: string[];

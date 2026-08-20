@@ -1,8 +1,8 @@
 # Agent attribution in other coding tools
 
 This note records attribution features shipped by other coding-agent products. It keeps the
-motivation for Pi Must Win tied to inspectable behavior and avoids guesses about a company's intent.
-The source calls these features attribution. Pi Must Win treats their distribution effect as a growth
+motivation for pi-must-win tied to inspectable behavior and avoids guesses about a company's intent.
+The source calls these features attribution. pi-must-win treats their distribution effect as a growth
 loop.
 
 The observations below were checked on July 20, 2026. Bundled product code can change between
@@ -84,5 +84,5 @@ That code is limited to Codex-managed baseline repositories.
 These implementations differ in reach and have changed over time. The recurring product decision is
 to spend engineering effort on attribution through commit metadata, pull-request copy, settings,
 protocol fields, and UI backed by tests. That attribution carries the product name into repositories where
-other developers can encounter it. Pi Must Win applies the same mechanism to Pi with a small,
+other developers can encounter it. pi-must-win applies the same mechanism to Pi with a small,
 inspectable extension that users choose to install.

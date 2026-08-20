@@ -1,6 +1,6 @@
 # Command executor integration
 
-Pi Must Win can attribute commits created by a Pi command executor without knowing the executor's tool name or command schema. The executor or a composition package applies attribution to the child process environment immediately before spawn.
+pi-must-win can attribute commits created by a Pi command executor without knowing the executor's tool name or command schema. The executor or a composition package applies attribution to the child process environment immediately before spawn.
 
 ## Environment API
 
@@ -14,7 +14,7 @@ import piMustWin, { CommitAttributionSession, disabledEntriesForEnv } from "pi-m
 // every child environment. Without them, `repoDisable` options are ignored for custom sessions.
 const attribution = new CommitAttributionSession(disabledEntriesForEnv());
 
-// Reuse the same session for Pi Must Win's built-in Bash integration.
+// Reuse the same session for pi-must-win's built-in Bash integration.
 piMustWin(pi, { commitAttributionSession: attribution });
 
 const childEnvironment = attribution.environment({ ...process.env }, activeModelName, VERSION);

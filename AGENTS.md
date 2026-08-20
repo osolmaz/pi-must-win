@@ -1,4 +1,4 @@
-# Pi Must Win
+# pi-must-win
 
 - Read the installed Pi extension documentation before changing runtime behavior.
 - Keep branding truthful, recognizable, and limited to work created through Pi.
