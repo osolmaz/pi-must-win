@@ -8,12 +8,12 @@ date: 2026-08-04
 
 ## Purpose
 
-Pi Must Win adds attribution trailers to every commit Pi creates, with no way to turn it off per
+pi-must-win adds attribution trailers to every commit Pi creates, with no way to turn it off per
 repository. Users need to disable it for certain repos — including whole GitHub orgs — and they work
 with Git worktrees, so config placed in a single checkout is not enough.
 
 This feature was first built in the OnurPi wrapper package. It belongs here instead, so standalone
-installations of Pi Must Win get the same behavior.
+installations of pi-must-win get the same behavior.
 
 ## Scope
 
